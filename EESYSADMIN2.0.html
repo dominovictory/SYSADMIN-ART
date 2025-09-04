@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SYSADMIN-COMMAND</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background-color: #0d1117; /* Dark background */
+            font-family: 'Inter', sans-serif;
+            color: #c9d1d9;
+            overflow-x: hidden;
+            text-align: center;
+        }
+
+        .container {
+            width: 90vw;
+            max-width: 1000px;
+            aspect-ratio: 1 / 1;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.08);
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 20px 0;
+        }
+        
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+
+        .title {
+            margin-bottom: 20px;
+            font-size: 2rem;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="title">SYSADMIN-COMMAND</div>
+    <div class="container">
+        <canvas id="nestedCanvas"></canvas>
+    </div>
+
+    <script>
+        window.onload = function() {
+            // Get the canvas and its 2D rendering context
+            const canvas = document.getElementById('nestedCanvas');
+            const ctx = canvas.getContext('2d');
+
+            // --- Configuration for 100x100 Grid (Outer) ---
+            const GRID_SIZE_100 = 100;
+            const CANVAS_DIM_100 = 1000;
+            const PROBABILITY_100 = 0.005;
+            const PIXEL_SIZE_100 = CANVAS_DIM_100 / GRID_SIZE_100;
+
+            // --- Configuration for 25x25 Grid (Inner) ---
+            const GRID_SIZE_25 = 25;
+            const CANVAS_DIM_25 = 500; // Making it smaller to fit inside
+            const PROBABILITY_25 = 0.005;
+            const PIXEL_SIZE_25 = CANVAS_DIM_25 / GRID_SIZE_25;
+
+            // Define the background color
+            const backgroundColor = '#0d1117';
+
+            // Function to generate a random hexadecimal color string
+            function getRandomColor() {
+                const letters = '0123456789ABCDEF';
+                let color = '#';
+                for (let i = 0; i < 6; i++) {
+                    color += letters[Math.floor(Math.random() * 16)];
+                }
+                return color;
+            }
+
+            // Create a 2D array to represent the 100x100 grid
+            let grid100 = [];
+            for (let i = 0; i < GRID_SIZE_100; i++) {
+                grid100[i] = [];
+                for (let j = 0; j < GRID_SIZE_100; j++) {
+                    grid100[i][j] = {
+                        state: Math.random() > 0.5 ? 1 : 0,
+                        color: getRandomColor()
+                    };
+                }
+            }
+
+            // Create a 2D array to represent the 25x25 grid
+            let grid25 = [];
+            for (let i = 0; i < GRID_SIZE_25; i++) {
+                grid25[i] = [];
+                for (let j = 0; j < GRID_SIZE_25; j++) {
+                    grid25[i][j] = {
+                        state: Math.random() > 0.5 ? 1 : 0,
+                        color: getRandomColor()
+                    };
+                }
+            }
+
+            // Function to resize the canvas
+            function resizeCanvas() {
+                canvas.width = CANVAS_DIM_100;
+                canvas.height = CANVAS_DIM_100;
+            }
+
+            // Function to draw both grids
+            function drawGrids() {
+                // Clear the canvas with the background color
+                ctx.fillStyle = backgroundColor;
+                ctx.fillRect(0, 0, CANVAS_DIM_100, CANVAS_DIM_100);
+
+                // Draw the 100x100 grid first (the outer grid)
+                ctx.font = `${PIXEL_SIZE_100 * 0.75}px 'Inter'`;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                for (let i = 0; i < GRID_SIZE_100; i++) {
+                    for (let j = 0; j < GRID_SIZE_100; j++) {
+                        ctx.fillStyle = grid100[i][j].color;
+                        const text = grid100[i][j].state === 0 ? '0' : '1';
+                        const x = j * PIXEL_SIZE_100 + PIXEL_SIZE_100 / 2;
+                        const y = i * PIXEL_SIZE_100 + PIXEL_SIZE_100 / 2;
+                        ctx.fillText(text, x, y);
+                    }
+                }
+
+                // Calculate offset to center the 25x25 grid
+                const xOffset = (CANVAS_DIM_100 - CANVAS_DIM_25) / 2;
+                const yOffset = (CANVAS_DIM_100 - CANVAS_DIM_25) / 2;
+
+                // Draw the 25x25 grid on top (the inner grid)
+                ctx.font = `${PIXEL_SIZE_25 * 0.75}px 'Inter'`;
+                for (let i = 0; i < GRID_SIZE_25; i++) {
+                    for (let j = 0; j < GRID_SIZE_25; j++) {
+                        ctx.fillStyle = grid25[i][j].color;
+                        const text = grid25[i][j].state === 0 ? '0' : '1';
+                        const x = j * PIXEL_SIZE_25 + PIXEL_SIZE_25 / 2 + xOffset;
+                        const y = i * PIXEL_SIZE_25 + PIXEL_SIZE_25 / 2 + yOffset;
+                        ctx.fillText(text, x, y);
+                    }
+                }
+            }
+
+            // Function to update the 100x100 grid state randomly
+            function updateGrid100() {
+                for (let i = 0; i < GRID_SIZE_100; i++) {
+                    for (let j = 0; j < GRID_SIZE_100; j++) {
+                        if (Math.random() < PROBABILITY_100) {
+                            grid100[i][j].state = 1 - grid100[i][j].state;
+                            grid100[i][j].color = getRandomColor();
+                        }
+                    }
+                }
+            }
+
+            // Function to update the 25x25 grid state randomly
+            function updateGrid25() {
+                for (let i = 0; i < GRID_SIZE_25; i++) {
+                    for (let j = 0; j < GRID_SIZE_25; j++) {
+                        if (Math.random() < PROBABILITY_25) {
+                            grid25[i][j].state = 1 - grid25[i][j].state;
+                            grid25[i][j].color = getRandomColor();
+                        }
+                    }
+                }
+            }
+
+            // The main animation loop
+            function gameLoop() {
+                updateGrid100();
+                updateGrid25();
+                drawGrids();
+                requestAnimationFrame(gameLoop);
+            }
+
+            // Event listener for window resizing
+            window.addEventListener('resize', resizeCanvas);
+
+            // Initial setup
+            resizeCanvas();
+            gameLoop();
+        };
+    </script>
+</body>
+</html>
